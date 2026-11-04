@@ -1,0 +1,134 @@
+/* Mailboxes page: toolbar, filters, table, bulk bar, pager. */
+
+/* ============================================================ toolbar */
+.page-mailboxes .toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 12px; }
+.toolbar-spacer { flex: 1 1 0; min-width: 0; }
+.toolbar-filters, .toolbar-actions { display: flex; align-items: center; gap: 8px; }
+.toolbar-filters .select { width: auto; max-width: 240px; }
+
+.search-box { position: relative; display: flex; align-items: center; flex: 1 1 260px; min-width: 200px; max-width: 400px; }
+.search-box .input { padding: 0 36px 0 35px; }
+.search-box .input::-webkit-search-cancel-button { -webkit-appearance: none; appearance: none; }
+.search-box-ico { position: absolute; left: 11px; color: var(--faint); pointer-events: none; transition: color var(--t-fast); }
+.search-box:focus-within .search-box-ico { color: var(--accent-text); }
+.search-clear { position: absolute; right: 6px; }
+
+/* ============================================================ status chips */
+.chips { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-bottom: 14px; }
+.chip {
+  display: inline-flex; align-items: center; gap: 7px;
+  height: 30px; padding: 0 6px 0 11px;
+  border: 1px solid var(--border); border-radius: 999px;
+  background: var(--surface); color: var(--text-2);
+  font-size: 13px; font-weight: 500; line-height: 1; white-space: nowrap;
+  user-select: none;
+  transition: background var(--t-fast), border-color var(--t-fast), color var(--t-fast), box-shadow var(--t-fast);
+}
+.chip:not(:has(.chip-count)) { padding-right: 11px; }
+.chip .dot { width: 7px; height: 7px; }
+.chip:hover { border-color: var(--border-strong); background: var(--surface-2); color: var(--text); }
+.chip-count {
+  display: inline-grid; place-items: center;
+  min-width: 22px; height: 20px; padding: 0 6px;
+  border-radius: 999px; background: var(--surface-3); color: var(--muted);
+  font-size: 11.5px; font-weight: 600; font-variant-numeric: tabular-nums;
+  transition: background var(--t-fast), color var(--t-fast);
+}
+.chip[aria-pressed="true"] { border-color: var(--c-line); background: var(--c-soft); color: var(--c-text); box-shadow: inset 0 0 0 1px var(--c-line); }
+.chip[aria-pressed="true"] .chip-count { background: var(--c-soft); color: var(--c-text); }
+/* "All" has no status colour: neutral raised state. */
+.chip:not([class*="st-"])[aria-pressed="true"] { border-color: var(--border-strong); background: var(--surface-3); color: var(--text); box-shadow: none; }
+.chip:not([class*="st-"])[aria-pressed="true"] .chip-count { background: var(--hover-strong); color: var(--text-2); }
+
+/* ============================================================ active filters */
+.active-filters { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: -4px 0 14px; font-size: 12.5px; }
+.af-label { display: inline-flex; align-items: center; gap: 5px; margin-right: 2px; color: var(--muted); font-weight: 500; }
+.af-chip {
+  display: inline-flex; align-items: center; gap: 4px; min-width: 0; max-width: 100%;
+  height: 26px; padding: 0 2px 0 9px;
+  border: 1px solid var(--accent-line); border-radius: 7px;
+  background: var(--accent-softer); color: var(--text-2);
+}
+.af-key { color: var(--muted); }
+.af-chip b { min-width: 0; max-width: 260px; overflow: hidden; color: var(--text); font-weight: 600; white-space: nowrap; text-overflow: ellipsis; }
+.af-chip .icon-btn { width: 20px; height: 20px; border-radius: 5px; }
+.af-reset { margin-left: 6px; font-size: 12.5px; }
+
+/* ============================================================ table card */
+/* overflow: clip (not hidden) keeps the card rounded without becoming a scroll container,
+   so the header cells can stick to the viewport under the topbar. */
+.table-card { position: relative; overflow: hidden; overflow: clip; }
+.table-scroll { min-width: 0; }
+
+.mtable { width: 100%; table-layout: fixed; border-collapse: separate; border-spacing: 0; font-size: 13px; }
+.mtable th, .mtable td { padding: 0 10px; text-align: left; vertical-align: middle; }
+.mtable th:first-child, .mtable td:first-child { padding-left: 16px; }
+.mtable th:last-child, .mtable td:last-child { padding-right: 12px; }
+
+.mtable thead th {
+  position: sticky; top: var(--topbar-h); z-index: 3;
+  height: 38px;
+  background: var(--foot);
+  box-shadow: inset 0 -1px 0 var(--border);
+  color: var(--muted); font-size: 12px; font-weight: 500; white-space: nowrap;
+}
+.mtable thead th.num { text-align: right; }
+
+.th-sort {
+  display: inline-flex; align-items: center; gap: 4px; max-width: 100%;
+  margin: 0 -6px; padding: 4px 6px;
+  border: 0; border-radius: 6px; background: none;
+  color: inherit; font: inherit; white-space: nowrap;
+  transition: background var(--t-fast), color var(--t-fast);
+}
+.th-sort:hover { background: var(--hover-strong); color: var(--text); }
+.sort-ico { opacity: .4; transition: opacity var(--t-fast), color var(--t-fast); }
+.th-sort:hover .sort-ico { opacity: .85; }
+th[aria-sort="ascending"] .th-sort, th[aria-sort="descending"] .th-sort { color: var(--text); }
+th[aria-sort="ascending"] .sort-ico, th[aria-sort="descending"] .sort-ico { opacity: 1; color: var(--accent-text); }
+
+.mtable tbody td { height: 56px; padding-top: 8px; padding-bottom: 8px; border-bottom: 1px solid var(--border); transition: background var(--t-fast); }
+.mtable tbody tr:last-child > td { border-bottom: 0; }
+.mtable tbody tr[data-email] { cursor: pointer; }
+.mtable tbody tr[data-email]:hover > td { background: var(--hover); }
+.mtable tbody tr.is-selected > td { background: var(--accent-softer); }
+.mtable tbody tr.is-selected:hover > td { background: var(--accent-soft); }
+.mtable tbody tr.is-selected > td:first-child { box-shadow: inset 2px 0 0 var(--accent); }
+.mtable td > .muted { color: var(--faint); }
+
+/* columns (widths apply through the header row: table-layout: fixed) */
+.mtable .c-check { width: 42px; padding-right: 0; user-select: none; }
+.mtable td.c-check { cursor: default; }
+.mtable .c-check .checkbox { display: block; }
+.mtable .c-status { width: 128px; }
+.mtable .c-health { width: 128px; }
+.mtable .c-code { width: 104px; }
+.mtable .c-msgs { width: 70px; }
+.mtable .c-uses { width: 78px; }
+.mtable .c-note { width: 14%; }
+.mtable .c-updated { width: 108px; }
+.mtable .c-actions { width: 50px; text-align: right; }
+.mtable td.num { text-align: right; font-variant-numeric: tabular-nums; }
+.mtable td.c-updated { color: var(--muted); font-size: 12.5px; white-space: nowrap; }
+
+.email-cell { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.email-link { display: block; overflow: hidden; color: var(--text); font-weight: 500; white-space: nowrap; text-overflow: ellipsis; }
+.email-link:hover { color: var(--accent-text); }
+.email-meta { display: flex; align-items: center; gap: 5px; min-width: 0; overflow: hidden; color: var(--muted); font-size: 11.5px; line-height: 18px; white-space: nowrap; }
+.provider { flex: none; margin-right: 2px; }
+.email-meta .tag { flex: none; height: 18px; padding: 0 6px; font-size: 11px; }
+
+.mtable .health { max-width: 100%; }
+.code-cell { display: flex; flex-direction: column; align-items: flex-start; gap: 3px; min-width: 0; }
+.code-age { color: var(--muted); font-size: 11.5px; white-space: nowrap; }
+.note { display: block; overflow: hidden; color: var(--text-2); white-space: nowrap; text-overflow: ellipsis; }
+
+.row-menu { color: var(--faint); }
+.mtable tbody tr:hover .row-menu { color: var(--text-2); }
+.row-menu:hover, .row-menu[aria-expanded="true"] { color: var(--text) !important; }
+
+/* skeleton, empty */
+.mtable tbody tr.is-skel > td { cursor: default; }
+.mtable tbody tr.is-skel .skel-line { max-width: 220px; }
+.empty-row > td { height: auto !important; padding: 0 !important; border-bottom: 0 !important; background: none !important; cursor: default; }
+.empty-row .empty { padding: 64px 24px 68px; }
