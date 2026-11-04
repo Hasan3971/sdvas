@@ -79,8 +79,32 @@ class Request:
         return self.hub.config.trust_proxy and self.headers.get("X-Forwarded-Proto", "").lower() == "https"
 
     @property
+    def chunked(self) -> bool:
+        return "chunked" in (self.headers.get("Transfer-Encoding") or "").lower()
+
+    def _read_chunked(self) -> bytes:
+        limit, out, rfile = self.hub.config.max_body, bytearray(), self.handler.rfile
+        while True:
+            size_line = rfile.readline(1024).split(b";")[0].strip()
+            try:
+                size = int(size_line, 16)
+            except ValueError as exc:
+                raise ApiError(400, "bad_chunk", "некоректний chunked-запит") from exc
+            if size == 0:
+                while rfile.readline(1024).strip():  # optional trailers
+                    pass
+                return bytes(out)
+            if len(out) + size > limit:
+                raise ApiError(413, "too_large", "тіло запиту завелике")
+            out += rfile.read(size)
+            rfile.readline(4)
+
+    @property
     def body(self) -> bytes:
         if self._body is None:
+            if self.chunked:
+                self._body = self._read_chunked()
+                return self._body
             try:
                 length = int(self.headers.get("Content-Length") or 0)
             except ValueError:
@@ -89,6 +113,20 @@ class Request:
                 raise ApiError(413, "too_large", "тіло запиту завелике")
             self._body = self.handler.rfile.read(length) if length > 0 else b""
         return self._body
+
+    def discard_body(self) -> None:
+        """Keep the keep-alive stream in sync when a handler never read the body."""
+        if self._body is not None:
+            return
+        try:
+            length = int(self.headers.get("Content-Length") or 0)
+        except ValueError:
+            length = 0
+        if self.chunked or length > 1_048_576:
+            self.handler.close_connection = True
+        elif length > 0:
+            self.handler.rfile.read(length)
+            self._body = b""
 
     @property
     def content_type(self) -> str:
@@ -184,6 +222,10 @@ class Handler(BaseHTTPRequestHandler):
         except Exception:
             log.exception("unhandled error on %s %s", method, path)
             response = Response.json({"error": {"code": "internal", "message": "внутрішня помилка сервера"}}, 500)
+        try:
+            req.discard_body()
+        except OSError:
+            self.close_connection = True
         self._send(req, response)
         shown = "/k/***" + (path if path_key else "")
         if not path.startswith("/api/v1/health"):
