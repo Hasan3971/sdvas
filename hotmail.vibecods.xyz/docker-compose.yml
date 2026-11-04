@@ -1,0 +1,23 @@
+services:
+  hub:
+    build: .
+    image: hotmail-hub:2
+    container_name: hotmail-hub
+    restart: unless-stopped
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      HUB_TRUST_PROXY: "1"
+      HUB_PUBLIC_URL: ${HUB_PUBLIC_URL:-https://hotmail.vibecods.xyz}
+      TZ: Europe/Kyiv
+    ports:
+      - "127.0.0.1:${HOST_HTTP_PORT:-14010}:8080"
+    volumes:
+      # secret.key, FIRST_RUN.txt and daily mailbox backups live next to the project
+      - ./data:/app/data
+      # SQLite stays on a Docker volume: WAL does not work reliably on Windows bind mounts
+      - hotmail_db:/app/db
+
+volumes:
+  hotmail_db:

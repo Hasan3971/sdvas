@@ -1,0 +1,17 @@
+__pycache__/
+*.pyc
+.env
+data/
+*.db
+*.db-wal
+*.db-shm
+.venv/
+node_modules/
+# real mailbox lists never go to git
+mails*.txt
+!samples/mails.example.txt
+tests/
+docs/
+deploy/
+samples/
+.git

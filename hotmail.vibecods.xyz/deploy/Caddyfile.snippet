@@ -1,0 +1,12 @@
+hotmail.vibecods.xyz {
+	encode zstd gzip
+
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		Referrer-Policy "no-referrer"
+		-Server
+	}
+
+	# the hub keeps long-poll requests (GET .../code?wait=120) open, so no response timeout here
+	reverse_proxy host.docker.internal:14010
+}

@@ -1,0 +1,12 @@
+# Приклад файлу для імпорту (усі дані вигадані). Кожен рядок — одна скринька.
+# 1) Hotmail/Outlook через OAuth2:  email:пароль:refresh_token:client_id
+demo01@hotmail.com:Passw0rd:M.C507_BAY.0.U.-Cexample-refresh-token-value:9e5f94bc-e8a4-4e73-b8be-63364c29d753
+# Розділювач може бути й |  або ;  — формат визначається автоматично
+demo02@outlook.com|Passw0rd|M.C507_BAY.0.U.-Cexample-refresh-token-two|9e5f94bc-e8a4-4e73-b8be-63364c29d753
+# 2) Звичайний IMAP (хост підбирається за доменом):  email;пароль
+user@rambler.ru;password
+user@ukr.net;password
+# 3) Власний IMAP або спільна скринька:  email;пароль;imap_host[:port][;login]
+catchall@mydomain.com;password;imap.gmail.com:993;inbox@gmail.com
+# 4) Вимкнена скринька (сумісність зі старим mails.txt)
+#disabled old@mail.ru;password
