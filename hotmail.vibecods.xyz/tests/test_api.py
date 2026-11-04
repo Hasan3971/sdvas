@@ -103,6 +103,47 @@ class AuthTests(ApiCase):
             self.assertEqual(self.app.request("GET", path)[0], 404, path)
 
 
+class HttpRobustnessTests(ApiCase):
+    def raw(self, payload: bytes, expect: int) -> bytes:
+        import socket
+        with socket.create_connection(("127.0.0.1", self.app.port), timeout=10) as sock:
+            sock.sendall(payload)
+            sock.settimeout(5)
+            data = b""
+            try:
+                while data.count(b"HTTP/1.1 ") < expect:
+                    chunk = sock.recv(65536)
+                    if not chunk:
+                        break
+                    data += chunk
+            except socket.timeout:
+                pass
+            return data
+
+    def test_unread_body_does_not_poison_the_next_request(self):
+        body = b'{"email":"a@mail.ru","password":"p"}'
+        req = (b"POST /api/v1/mailboxes HTTP/1.1\r\nHost: x\r\nContent-Type: application/json\r\nContent-Length: %d\r\n\r\n" % len(body)) + body
+        data = self.raw(req + b"GET /health HTTP/1.1\r\nHost: x\r\nConnection: close\r\n\r\n", 2)
+        self.assertIn(b"HTTP/1.1 401", data)
+        self.assertIn(b"HTTP/1.1 200", data)
+
+    def test_chunked_import_is_decoded(self):
+        key = self.app.key("bas")
+        text = b"a@mail.ru;p\nb@mail.ru;p\n"
+        chunks = b"%x\r\n%s\r\n0\r\n\r\n" % (len(text), text)
+        head = (f"POST /api/v1/import HTTP/1.1\r\nHost: x\r\nAuthorization: Bearer {key}\r\nContent-Type: text/plain\r\n"
+                "Transfer-Encoding: chunked\r\nConnection: close\r\n\r\n").encode()
+        data = self.raw(head + chunks, 1)
+        self.assertIn(b"HTTP/1.1 200", data)
+        self.assertEqual(self.app.hub.stats()["total"], 2)
+
+    def test_oversized_body_is_rejected(self):
+        self.app.hub.config.max_body = 100
+        key = self.app.key("bas")
+        status, _, data = self.app.with_key(key, "POST", "/api/v1/import", "x" * 500, content_type="text/plain")
+        self.assertEqual(status, 413)
+
+
 class MailboxApiTests(ApiCase):
     def test_crud(self):
         self.admin("GET", "/api/v1/stats")
